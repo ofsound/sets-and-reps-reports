@@ -10,8 +10,11 @@
 	import { arrayAttemptsToFirestoreMapAttempts } from '$lib/utils/dataConversions';
 
 	import { firestoreMapAttemptsToArrayAttempts } from '$lib/utils/dataConversions';
+	import { onMount } from 'svelte';
 
-	$effect(() => {
+	let exercises = $state<ExerciseObject[]>([]);
+
+	onMount(() => {
 		const q = query(collection(db, 'exercises'), orderBy('order', 'asc'));
 
 		const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -33,7 +36,9 @@
 				dataFromFirestore.push(rowFromFirestore);
 			});
 
-			console.log(dataFromFirestore);
+			exercises = dataFromFirestore;
+
+			// console.log(dataFromFirestore);
 		});
 		return () => unsubscribe();
 	});
@@ -41,3 +46,14 @@
 
 <h1 class="mb-2 text-3xl font-bold underline">Welcome to SvelteKit</h1>
 <p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+
+<div>
+	{#each exercises as exercise}
+		<div>
+			<a href="/exercises/{exercise.id}" class="cursor-pointer hover:underline">
+				<h2>{exercise.name}</h2>
+				<p>{exercise.attempts.length}</p>
+			</a>
+		</div>
+	{/each}
+</div>
