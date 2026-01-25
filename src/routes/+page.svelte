@@ -37,22 +37,18 @@
 			});
 
 			exercises = dataFromFirestore;
-
-			// console.log(dataFromFirestore);
 		});
 		return () => unsubscribe();
 	});
 </script>
 
-<h1 class="mb-2 text-3xl font-bold underline">Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<h1 class="mb-2 text-3xl font-bold underline">Sets and Reps Reports</h1>
 
 <div>
 	{#each exercises as exercise}
 		<div>
 			<a href="/exercises/{exercise.id}" class="cursor-pointer hover:underline">
 				<h2>{exercise.name}</h2>
-				<p>{exercise.attempts.length}</p>
 			</a>
 		</div>
 	{/each}

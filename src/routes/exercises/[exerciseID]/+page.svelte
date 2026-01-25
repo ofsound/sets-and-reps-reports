@@ -4,21 +4,24 @@
 	import type { ExerciseObject } from '$lib/types/interfaces';
 	import { firestoreMapAttemptsToArrayAttempts } from '$lib/utils/dataConversions';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { get } from 'svelte/store';
+	import { page } from '$app/state';
 
-	let exercise = $state<ExerciseObject | null>(null);
-	let loading = $state(true);
+	/** @type {import('./$types').PageProps} */
+	let { data } = $props();
+
+	const { exercise: initialExercise } = data;
+	let exercise = $state<ExerciseObject | null>(initialExercise);
+	let loading = $state(initialExercise === null);
 
 	onMount(() => {
-		// Get exerciseID from route params
-		const exerciseID = get(page).params.exerciseID;
+		const exerciseID = page.params.exerciseID;
 		
 		if (!exerciseID) {
 			loading = false;
 			return;
 		}
 
+		// Set up real-time updates from Firestore
 		const exerciseRef = doc(db, 'exercises', exerciseID);
 		
 		const unsubscribe = onSnapshot(exerciseRef, (docSnapshot) => {
@@ -51,11 +54,11 @@
 		<p>Total attempts: {exercise.attempts.length}</p>
 		<p>Order: {exercise.order}</p>
 		<p>Current: {exercise.isCurrent ? 'Yes' : 'No'}</p>
-		
+
 		<div class="mt-4">
-			<h2 class="text-2xl font-semibold mb-2">Attempts</h2>
+			<h2 class="mb-2 text-2xl font-semibold">Attempts</h2>
 			{#each exercise.attempts as attempt, attemptIndex}
-				<div class="mb-4 p-4 border rounded">
+				<div class="mb-4 rounded border p-4">
 					<h3 class="font-semibold">Attempt {attemptIndex + 1}</h3>
 					{#each attempt as set}
 						<div class="ml-4">
