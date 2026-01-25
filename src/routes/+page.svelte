@@ -35,7 +35,7 @@
 
 			console.log(dataFromFirestore);
 		});
-		return () => unsubscribe(); // Cleanup
+		return () => unsubscribe();
 	});
 </script>
 
