@@ -48,7 +48,7 @@
 	{#each exercises as exercise}
 		<div>
 			<a href="/exercises/{exercise.id}" class="cursor-pointer hover:underline">
-				<h2>{exercise.name}</h2>
+				{exercise.name}
 			</a>
 		</div>
 	{/each}

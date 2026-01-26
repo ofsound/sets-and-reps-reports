@@ -6,24 +6,25 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 
-	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
-	const { exercise: initialExercise } = data;
+	// Use initial data from load function (for SSR/SEO)
+	const initialExercise = data.exercise;
 	let exercise = $state<ExerciseObject | null>(initialExercise);
-	let loading = $state(initialExercise === null);
+	let loading = $state(!initialExercise);
 
 	onMount(() => {
 		const exerciseID = page.params.exerciseID;
-		
+
 		if (!exerciseID) {
 			loading = false;
 			return;
 		}
 
-		// Set up real-time updates from Firestore
+		// Only set up real-time listener - initial data already loaded from +page.ts
+		// This will update the exercise when Firestore data changes
 		const exerciseRef = doc(db, 'exercises', exerciseID);
-		
+
 		const unsubscribe = onSnapshot(exerciseRef, (docSnapshot) => {
 			if (docSnapshot.exists()) {
 				const exerciseData = docSnapshot.data();
@@ -58,18 +59,38 @@
 		<div class="mt-4">
 			<h2 class="mb-2 text-2xl font-semibold">Attempts</h2>
 			{#each exercise.attempts as attempt, attemptIndex}
-				<div class="mb-4 rounded border p-4">
-					<h3 class="font-semibold">Attempt {attemptIndex + 1}</h3>
-					{#each attempt as set}
-						<div class="ml-4">
-							<p>Reps: {set.reps}, Measurement: {set.measurement}</p>
-							{#if set.notes}
-								<p class="text-sm text-gray-600">Notes: {set.notes}</p>
-							{/if}
-							<p class="text-sm text-gray-500">Date: {new Date(set.date).toLocaleDateString()}</p>
-						</div>
-					{/each}
-				</div>
+				{#if attempt.length > 0}
+					<div class="mb-4 rounded border p-4">
+						<h3 class="font-semibold">Attempt {attemptIndex + 1}</h3>
+						<p class="ml-4 text-sm text-gray-500">
+							Date: {new Date(attempt[0].date)
+								.toLocaleString(undefined, {
+									month: '2-digit',
+									day: '2-digit',
+									year: 'numeric',
+									hour: 'numeric',
+									minute: '2-digit',
+									hour12: true
+								})
+								.replace(',', '')
+								.replace(
+									/(\d{1,2}:\d{2})\s([AP]M)/,
+									(_, t, ap) => t.toLowerCase() + ap.toLowerCase()
+								)}
+						</p>
+
+						{#each attempt as set}
+							<div class="ml-4">
+								<p>
+									{set.reps} x {set.measurement}
+									{#if set.notes}
+										<span class="text-sm text-gray-600">Notes: {set.notes}</span>
+									{/if}
+								</p>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			{/each}
 		</div>
 	</div>
