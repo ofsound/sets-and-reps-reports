@@ -69,7 +69,7 @@
 		chartContainer.innerHTML = '';
 
 		// Chart dimensions
-		const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+		const margin = { top: 20, right: 30, bottom: 60, left: 50 };
 		const width = chartContainer.clientWidth - margin.left - margin.right;
 		const height = 400 - margin.top - margin.bottom;
 
@@ -150,7 +150,7 @@
 		// Add X axis
 		g.append('g')
 			.attr('transform', `translate(0,${height})`)
-			.call(d3.axisBottom(xScale).tickFormat(d3.timeFormat('%m/%d/%Y')))
+			.call(d3.axisBottom(xScale).tickFormat((d) => d3.timeFormat('%m/%d/%Y')(d as Date)))
 			.selectAll('text')
 			.style('text-anchor', 'end')
 			.attr('dx', '-.8em')
@@ -161,23 +161,23 @@
 		g.append('g').call(d3.axisLeft(yScale));
 
 		// Add axis labels
-		svg
-			.append('text')
-			.attr('transform', 'rotate(-90)')
-			.attr('y', 15)
-			.attr('x', 0 - height / 2)
-			.style('text-anchor', 'middle')
-			.style('font-size', '14px')
-			.style('fill', '#374151')
-			.text('Composite Value');
+		// svg
+		// 	.append('text')
+		// 	.attr('transform', 'rotate(-90)')
+		// 	.attr('y', 15)
+		// 	.attr('x', 0 - height / 2)
+		// 	.style('text-anchor', 'middle')
+		// 	.style('font-size', '14px')
+		// 	.style('fill', '#374151')
+		// 	.text('Composite Value');
 
-		svg
-			.append('text')
-			.attr('transform', `translate(${width / 2}, ${height + margin.bottom - 5})`)
-			.style('text-anchor', 'middle')
-			.style('font-size', '14px')
-			.style('fill', '#374151')
-			.text('Date');
+		// svg
+		// 	.append('text')
+		// 	.attr('transform', `translate(${width / 2}, ${height + margin.bottom - 5})`)
+		// 	.style('text-anchor', 'middle')
+		// 	.style('font-size', '12px')
+		// 	.style('fill', '#374151')
+		// 	.text('Date');
 	});
 </script>
 
@@ -192,11 +192,7 @@
 
 		{#if chartData.length > 0}
 			<div class="mt-6">
-				<h2 class="mb-4 text-2xl font-semibold">Progress Chart</h2>
-				<div
-					bind:this={chartContainer}
-					class="w-full overflow-x-auto rounded border border-gray-200 bg-white p-4 shadow-sm"
-				></div>
+				<div bind:this={chartContainer} class="w-full overflow-x-auto bg-white p-4 pb-12"></div>
 			</div>
 		{:else if !loading}
 			<div class="mt-6">
