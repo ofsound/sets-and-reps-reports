@@ -13,33 +13,40 @@
 	onMount(() => {
 		const q = query(collection(db, 'exercises'), orderBy('order', 'asc'));
 
-		const unsubscribe = onSnapshot(q, (querySnapshot) => {
-			const dataFromFirestore: ExerciseObject[] = [];
+		const unsubscribe = onSnapshot(
+			q,
+			(querySnapshot) => {
+				const dataFromFirestore: ExerciseObject[] = [];
 
-			querySnapshot.forEach((doc) => {
-				const exercise = doc.data();
+				querySnapshot.forEach((doc) => {
+					const exercise = doc.data();
 
-				const exerciseAttempts = firestoreMapAttemptsToArrayAttempts(exercise.attempts);
+					const exerciseAttempts = firestoreMapAttemptsToArrayAttempts(exercise.attempts);
 
-				const rowFromFirestore: ExerciseObject = {
-					id: exercise.id,
-					name: exercise.name,
-					attempts: exerciseAttempts,
-					order: exercise.order,
-					isCurrent: exercise.isCurrent
-				};
+					const rowFromFirestore: ExerciseObject = {
+						id: exercise.id,
+						name: exercise.name,
+						attempts: exerciseAttempts,
+						order: exercise.order,
+						isCurrent: exercise.isCurrent
+					};
 
-				dataFromFirestore.push(rowFromFirestore);
-			});
+					dataFromFirestore.push(rowFromFirestore);
+				});
 
-			exercises = dataFromFirestore;
-		});
+				exercises = dataFromFirestore;
+			},
+			(error) => {
+				console.error('Error fetching exercises:', error);
+			}
+		);
+
 		return () => unsubscribe();
 	});
 </script>
 
 <div>
-	{#each exercises as exercise}
+	{#each exercises as exercise (exercise.id)}
 		<div>
 			<a href="/exercises/{exercise.id}" class="cursor-pointer hover:underline">
 				{exercise.name}

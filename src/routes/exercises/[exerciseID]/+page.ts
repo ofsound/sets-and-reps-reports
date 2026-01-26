@@ -3,8 +3,9 @@ import { db } from '$lib/firebase-config';
 import type { ExerciseObject } from '$lib/types/interfaces';
 import { firestoreMapAttemptsToArrayAttempts } from '$lib/utils/dataConversions';
 
-/** @type {import('./$types').PageLoad} */
-export async function load({ params }) {
+import type { PageLoad } from './$types';
+
+export const load: PageLoad = async ({ params }) => {
 	const exerciseID = params.exerciseID;
 
 	if (!exerciseID) {
@@ -30,4 +31,4 @@ export async function load({ params }) {
 	};
 
 	return { exercise };
-}
+};

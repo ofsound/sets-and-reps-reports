@@ -15,7 +15,6 @@
 	let { data } = $props();
 
 	// Use initial data from load function (for SSR/SEO)
-	// svelte-ignore state_referenced_locally
 	const initialExercise = data.exercise;
 	let exercise = $state<ExerciseObject | null>(initialExercise);
 	let loading = $state(!initialExercise);
@@ -39,23 +38,31 @@
 		// It's possible this is overkill, and just a static state is enough.
 		const exerciseRef = doc(db, 'exercises', exerciseID);
 
-		const unsubscribe = onSnapshot(exerciseRef, (docSnapshot) => {
-			if (docSnapshot.exists()) {
-				const exerciseData = docSnapshot.data();
-				const exerciseAttempts = firestoreMapAttemptsToArrayAttempts(exerciseData.attempts);
+		const unsubscribe = onSnapshot(
+			exerciseRef,
+			(docSnapshot) => {
+				if (docSnapshot.exists()) {
+					const exerciseData = docSnapshot.data();
+					const exerciseAttempts = firestoreMapAttemptsToArrayAttempts(exerciseData.attempts);
 
-				exercise = {
-					id: exerciseData.id || docSnapshot.id,
-					name: exerciseData.name,
-					attempts: exerciseAttempts,
-					order: exerciseData.order,
-					isCurrent: exerciseData.isCurrent
-				};
-			} else {
+					exercise = {
+						id: exerciseData.id || docSnapshot.id,
+						name: exerciseData.name,
+						attempts: exerciseAttempts,
+						order: exerciseData.order,
+						isCurrent: exerciseData.isCurrent
+					};
+				} else {
+					exercise = null;
+				}
+				loading = false;
+			},
+			(error) => {
+				console.error('Error fetching exercise:', error);
+				loading = false;
 				exercise = null;
 			}
-			loading = false;
-		});
+		);
 
 		return () => unsubscribe();
 	});
@@ -66,17 +73,20 @@
 			return;
 		}
 
-		// Clear previous chart
-		chartContainer.innerHTML = '';
+		// Store reference to SVG for cleanup
+		const container = chartContainer;
+
+		// Clear previous chart - necessary for D3 re-rendering
+		container.innerHTML = '';
 
 		// Chart dimensions
 		const margin = { top: 20, right: 30, bottom: 60, left: 50 };
-		const width = chartContainer.clientWidth - margin.left - margin.right;
+		const width = container.clientWidth - margin.left - margin.right;
 		const height = 400 - margin.top - margin.bottom;
 
 		// Create SVG
 		const svg = d3
-			.select(chartContainer)
+			.select(container)
 			.append('svg')
 			.attr('width', width + margin.left + margin.right)
 			.attr('height', height + margin.top + margin.bottom);
@@ -161,24 +171,12 @@
 		// Add Y axis
 		g.append('g').call(d3.axisLeft(yScale));
 
-		// Add axis labels
-		// svg
-		// 	.append('text')
-		// 	.attr('transform', 'rotate(-90)')
-		// 	.attr('y', 15)
-		// 	.attr('x', 0 - height / 2)
-		// 	.style('text-anchor', 'middle')
-		// 	.style('font-size', '14px')
-		// 	.style('fill', '#374151')
-		// 	.text('Composite Value');
-
-		// svg
-		// 	.append('text')
-		// 	.attr('transform', `translate(${width / 2}, ${height + margin.bottom - 5})`)
-		// 	.style('text-anchor', 'middle')
-		// 	.style('font-size', '12px')
-		// 	.style('fill', '#374151')
-		// 	.text('Date');
+		// Cleanup function - remove SVG when effect re-runs or component unmounts
+		return () => {
+			if (container) {
+				container.innerHTML = '';
+			}
+		};
 	});
 </script>
 
@@ -203,7 +201,7 @@
 
 		<div class="mt-4">
 			<h2 class="mb-2 text-2xl font-semibold">Attempts</h2>
-			{#each exercise.attempts as attempt, attemptIndex}
+			{#each exercise.attempts as attempt, attemptIndex (attemptIndex)}
 				{#if attempt.length > 0}
 					<div class="mb-4 rounded border p-4">
 						<h3 class="font-semibold">Attempt {attemptIndex + 1}</h3>
@@ -224,7 +222,7 @@
 								)}
 						</p>
 
-						{#each attempt as set}
+						{#each attempt as set, setIndex (setIndex)}
 							<div class="ml-4">
 								<p>
 									{set.reps} x {set.measurement}
