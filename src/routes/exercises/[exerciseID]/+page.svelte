@@ -1,23 +1,18 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 
 	import { doc, onSnapshot } from 'firebase/firestore';
 	import { db } from '$lib/firebase-config';
 
-	import { firestoreMapAttemptsToArrayAttempts } from '$lib/utils/dataConversions';
 	import { transformAttemptsToChartData } from '$lib/utils/chartData';
-
-	import type { ExerciseObject } from '$lib/types/interfaces';
+	import { getExercise } from './exercise.remote';
 
 	import * as d3 from 'd3';
 
-	let { data } = $props();
-
-	// Use initial data from load function (for SSR/SEO)
-	const initialExercise = data.exercise;
-	let exercise = $state<ExerciseObject | null>(initialExercise);
-	let loading = $state(!initialExercise);
+	// Use remote function to fetch exercise data
+	const exerciseID = $derived(page.params.exerciseID);
+	const exerciseQuery = $derived(exerciseID ? getExercise(exerciseID) : null);
+	const exercise = $derived(exerciseQuery?.current ?? null);
 
 	// Chart container ref
 	let chartContainer: HTMLDivElement | undefined = $state(undefined);
@@ -25,43 +20,18 @@
 	// Compute chart data from exercise attempts
 	const chartData = $derived(exercise ? transformAttemptsToChartData(exercise.attempts) : []);
 
-	onMount(() => {
-		const exerciseID = page.params.exerciseID;
+	// Subscribe to Firestore for real-time updates. Re-runs when exerciseID changes (e.g. navigation).
+	// Teardown unsubscribes before re-run or on unmount.
+	$effect(() => {
+		if (!exerciseID) return;
 
-		if (!exerciseID) {
-			loading = false;
-			return;
-		}
-
-		// Only set up real-time listener - initial data already loaded from +page.ts
-		// This will update the exercise when Firestore data changes
-		// It's possible this is overkill, and just a static state is enough.
 		const exerciseRef = doc(db, 'exercises', exerciseID);
+		const query = getExercise(exerciseID);
 
 		const unsubscribe = onSnapshot(
 			exerciseRef,
-			(docSnapshot) => {
-				if (docSnapshot.exists()) {
-					const exerciseData = docSnapshot.data();
-					const exerciseAttempts = firestoreMapAttemptsToArrayAttempts(exerciseData.attempts);
-
-					exercise = {
-						id: exerciseData.id || docSnapshot.id,
-						name: exerciseData.name,
-						attempts: exerciseAttempts,
-						order: exerciseData.order,
-						isCurrent: exerciseData.isCurrent
-					};
-				} else {
-					exercise = null;
-				}
-				loading = false;
-			},
-			(error) => {
-				console.error('Error fetching exercise:', error);
-				loading = false;
-				exercise = null;
-			}
+			() => query.refresh(),
+			(error) => console.error('Error in Firestore listener:', error)
 		);
 
 		return () => unsubscribe();
@@ -180,8 +150,10 @@
 	});
 </script>
 
-{#if loading}
+{#if exerciseQuery?.loading}
 	<p>Loading exercise...</p>
+{:else if exerciseQuery?.error}
+	<p>Error loading exercise: {exerciseQuery.error.message}</p>
 {:else if exercise}
 	<div>
 		<h1 class="mb-2 text-3xl font-bold">{exercise.name}</h1>
@@ -193,7 +165,7 @@
 			<div class="mt-6">
 				<div bind:this={chartContainer} class="w-full overflow-x-auto bg-white p-4 pb-12"></div>
 			</div>
-		{:else if !loading}
+		{:else if !exerciseQuery?.loading}
 			<div class="mt-6">
 				<p class="text-sm text-gray-500">No chart data available</p>
 			</div>
