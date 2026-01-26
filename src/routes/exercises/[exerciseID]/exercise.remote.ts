@@ -1,8 +1,7 @@
 import * as v from 'valibot';
 import { query } from '$app/server';
 import { adminDb } from '$lib/server/firebase-admin';
-import type { ExerciseObject } from '$lib/types/interfaces';
-import { firestoreMapAttemptsToArrayAttempts } from '$lib/utils/dataConversions';
+import { transformFirestoreDocToExercise } from '$lib/server/exercise-helpers';
 
 export const getExercise = query(v.string(), async (exerciseID) => {
 	if (!exerciseID) {
@@ -21,17 +20,7 @@ export const getExercise = query(v.string(), async (exerciseID) => {
 			return null;
 		}
 
-		const exerciseAttempts = firestoreMapAttemptsToArrayAttempts(exerciseData.attempts);
-
-		const exercise: ExerciseObject = {
-			id: exerciseData.id || exerciseDoc.id,
-			name: exerciseData.name,
-			attempts: exerciseAttempts,
-			order: exerciseData.order,
-			isCurrent: exerciseData.isCurrent
-		};
-
-		return exercise;
+		return transformFirestoreDocToExercise(exerciseDoc, exerciseData);
 	} catch (err) {
 		console.error('Error fetching exercise:', err);
 		// Return null instead of throwing to allow graceful handling

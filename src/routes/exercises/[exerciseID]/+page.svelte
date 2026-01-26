@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 
-	import { doc, onSnapshot } from 'firebase/firestore';
-	import { db } from '$lib/firebase-config';
-
 	import { transformAttemptsToChartData } from '$lib/utils/chartData';
 	import { getExercise } from './exercise.remote';
 
@@ -19,23 +16,6 @@
 
 	// Compute chart data from exercise attempts
 	const chartData = $derived(exercise ? transformAttemptsToChartData(exercise.attempts) : []);
-
-	// Subscribe to Firestore for real-time updates. Re-runs when exerciseID changes (e.g. navigation).
-	// Teardown unsubscribes before re-run or on unmount.
-	$effect(() => {
-		if (!exerciseID) return;
-
-		const exerciseRef = doc(db, 'exercises', exerciseID);
-		const query = getExercise(exerciseID);
-
-		const unsubscribe = onSnapshot(
-			exerciseRef,
-			() => query.refresh(),
-			(error) => console.error('Error in Firestore listener:', error)
-		);
-
-		return () => unsubscribe();
-	});
 
 	// Render chart when chartData or container changes
 	$effect(() => {
