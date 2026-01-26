@@ -1,13 +1,9 @@
 <script lang="ts">
-	import { doc, updateDoc } from 'firebase/firestore';
-
 	import { db } from '$lib/firebase-config';
 
 	import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 
-	import type { ExerciseObject, SetObject } from '$lib/types/interfaces';
-
-	import { arrayAttemptsToFirestoreMapAttempts } from '$lib/utils/dataConversions';
+	import type { ExerciseObject } from '$lib/types/interfaces';
 
 	import { firestoreMapAttemptsToArrayAttempts } from '$lib/utils/dataConversions';
 	import { onMount } from 'svelte';
@@ -41,8 +37,6 @@
 		return () => unsubscribe();
 	});
 </script>
-
-<h1 class="mb-2 text-3xl font-bold underline">Sets and Reps Reports</h1>
 
 <div>
 	{#each exercises as exercise}

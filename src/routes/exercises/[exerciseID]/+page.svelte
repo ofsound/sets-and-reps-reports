@@ -15,6 +15,7 @@
 	let { data } = $props();
 
 	// Use initial data from load function (for SSR/SEO)
+	// svelte-ignore state_referenced_locally
 	const initialExercise = data.exercise;
 	let exercise = $state<ExerciseObject | null>(initialExercise);
 	let loading = $state(!initialExercise);
