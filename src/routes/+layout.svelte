@@ -13,7 +13,7 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<header class="mb-6 border-b border-b-stone-200 bg-gray-100 px-4 py-3">
+<header class="fixed mb-6 border-b border-b-stone-200 bg-gray-100 px-4 py-3">
 	<nav class="flex flex-wrap gap-2">
 		{#if exercisesQuery.loading}
 			<span class="text-sm text-gray-500">Loading exercises...</span>
@@ -35,6 +35,6 @@
 	</nav>
 </header>
 
-<main class="p-4">
+<main class="p-4 pt-24">
 	{@render children()}
 </main>
