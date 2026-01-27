@@ -1,6 +1,11 @@
 <script lang="ts">
 	import * as d3 from 'd3';
 	import type { ChartDataPoint } from '$lib/utils/chartData';
+	import {
+		formatAttemptDate,
+		formatAttemptDateDay,
+		formatAttemptDateTime
+	} from '$lib/utils/dataConversions';
 
 	interface Props {
 		data: ChartDataPoint[];
@@ -11,6 +16,12 @@
 
 	// Chart container ref
 	let chartContainer: HTMLDivElement | undefined = $state(undefined);
+
+	// Tooltip state
+	let tooltipVisible = $state(false);
+	let tooltipData = $state<ChartDataPoint | null>(null);
+	let tooltipX = $state(0);
+	let tooltipY = $state(0);
 
 	// Render chart when data or container changes
 	$effect(() => {
@@ -78,10 +89,21 @@
 			.data(data)
 			.enter()
 			.append('circle')
-			.attr('r', 4)
-			.attr('fill', '#3b82f6')
-			.attr('stroke', '#fff')
-			.attr('stroke-width', 2);
+			.attr('r', 8)
+			.attr('fill', '#ffffff')
+			.attr('stroke', '#3b82f6')
+			.attr('stroke-width', 2)
+			.style('cursor', 'pointer')
+			.on('mouseover', function (event, d) {
+				tooltipVisible = true;
+				tooltipData = d;
+				tooltipX = event.pageX;
+				tooltipY = event.pageY;
+			})
+			.on('mouseout', function () {
+				tooltipVisible = false;
+				tooltipData = null;
+			});
 
 		const xAxis = g.append('g').attr('transform', `translate(0,${chartHeight})`);
 
@@ -166,3 +188,43 @@
 		<p class="text-sm text-gray-500">No chart data available</p>
 	</div>
 {/if}
+
+{#if tooltipVisible && tooltipData}
+	<div class="tooltip" style="left: {tooltipX + 10}px; top: {tooltipY - 30}px;">
+		<div class="mb-0.5 text-[15px]">
+			{formatAttemptDate(tooltipData.attempt[0].date)}
+		</div>
+		<div class="mb-0.5 text-[13px] text-white/80">
+			{formatAttemptDateDay(tooltipData.attempt[0].date)}
+		</div>
+		<div class="mb-2 border-b border-white/20 pb-2 text-xs text-white/70">
+			{formatAttemptDateTime(tooltipData.attempt[0].date)}
+		</div>
+		<div class="flex flex-col gap-1">
+			{#each tooltipData.attempt as set, index (index)}
+				<div class="text-[13px] font-semibold text-white/95">
+					{set.measurement} × {set.reps}
+					{#if set.notes}
+						<span class="ml-2 text-[11px] font-normal text-white/60 italic">{set.notes}</span>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	</div>
+{/if}
+
+<style>
+	.tooltip {
+		position: fixed;
+		background-color: rgba(15, 23, 42, 0.95);
+		color: white;
+		padding: 12px 14px;
+		border-radius: 6px;
+		font-size: 14px;
+		pointer-events: none;
+		z-index: 1000;
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		backdrop-filter: blur(4px);
+		min-width: 180px;
+	}
+</style>

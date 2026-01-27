@@ -3,6 +3,7 @@ import type { SetObject } from '$lib/types/interfaces';
 export interface ChartDataPoint {
 	date: Date;
 	value: number;
+	attempt: SetObject[];
 }
 
 /**
@@ -41,7 +42,8 @@ export function transformAttemptsToChartData(
 		if (!isNaN(date.getTime())) {
 			chartData.push({
 				date,
-				value: sum
+				value: sum,
+				attempt
 			});
 		}
 	}
