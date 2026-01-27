@@ -2,7 +2,7 @@
 
 ## Critical: Svelte Code Quality
 
-**MANDATORY**: When writing or modifying ANY Svelte (.svelte) file, you MUST:
+**MANDATORY**: When writing or modifying ANY Svelte (.svelte) file or any .ts file in the src directory, you MUST:
 
 1. Use the `svelte-autofixer` MCP tool (via `user-svelte` server) to analyze the code
 2. Call it with the complete Svelte component code
