@@ -2,6 +2,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { getExercises } from './exercises.remote';
+	import { page } from '$app/state';
 
 	let { children } = $props();
 
@@ -12,15 +13,7 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<header class="mb-6 border-b bg-gray-100 px-4 py-3">
-	<div class="mb-3 flex items-center justify-between">
-		<a
-			href="/"
-			class="rounded bg-sky-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
-		>
-			Home
-		</a>
-	</div>
+<header class="mb-6 border-b border-b-stone-200 bg-gray-100 px-4 py-3">
 	<nav class="flex flex-wrap gap-2">
 		{#if exercisesQuery.loading}
 			<span class="text-sm text-gray-500">Loading exercises...</span>
@@ -28,9 +21,12 @@
 			<span class="text-sm text-red-500">Error loading exercises</span>
 		{:else}
 			{#each exercises as exercise (exercise.id)}
+				{@const active = page.url.pathname === `/exercises/${exercise.id}`}
 				<a
 					href="/exercises/{exercise.id}"
-					class="rounded bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300 hover:text-gray-900"
+					class="rounded px-3 py-1 text-sm font-medium transition-colors {active
+						? 'bg-blue-600 text-white hover:bg-blue-700'
+						: 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-900'}"
 				>
 					{exercise.name}
 				</a>
@@ -39,4 +35,6 @@
 	</nav>
 </header>
 
-{@render children()}
+<main class="p-4">
+	{@render children()}
+</main>
