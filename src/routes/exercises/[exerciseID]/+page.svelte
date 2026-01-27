@@ -2,7 +2,11 @@
 	import { page } from '$app/state';
 
 	import { transformAttemptsToChartData } from '$lib/utils/chartData';
-	import { formatAttemptDate } from '$lib/utils/dataConversions';
+	import {
+		formatAttemptDate,
+		formatAttemptDateDay,
+		formatAttemptDateTime
+	} from '$lib/utils/dataConversions';
 	import { getExercise } from './exercise.remote';
 
 	import Chart from '$lib/components/Chart.svelte';
@@ -23,40 +27,35 @@
 {:else if exercise}
 	<div>
 		<h1 class="mb-2 text-3xl font-bold">{exercise.name}</h1>
-		<!-- <p>Total attempts: {exercise.attempts.length}</p>
-		<p>Order: {exercise.order}</p>
-		<p>Current: {exercise.isCurrent ? 'Yes' : 'No'}</p> -->
 
 		<div class="mt-6">
 			<Chart data={chartData} />
 		</div>
 
 		<div class="mt-4">
-			<h2 class="mb-2 text-2xl font-semibold">Attempts</h2>
-			{#each exercise.attempts as attempt, attemptIndex (attemptIndex)}
-				{#if attempt.length > 0}
-					<div class="mb-4 rounded border p-4">
-						<h3 class="font-semibold">Attempt {attemptIndex + 1}</h3>
-						<p class="ml-4 text-sm text-gray-500">
-							{formatAttemptDate(attempt[0].date)}
-						</p>
-
-						{#each attempt as set, setIndex (setIndex)}
-							<div class="">
-								<p>
-									{set.reps} x {set.measurement}
-									{#if set.notes}
-										<span class="text-sm text-gray-600">Notes: {set.notes}</span>
-									{/if}
-								</p>
-								<div class="composite">
-									{set.reps * parseInt(set.measurement)}
-								</div>
+			<div class="flex flex-col-reverse gap-4">
+				{#each exercise.attempts as attempt, attemptIndex (attemptIndex)}
+					{#if attempt.length > 0}
+						<div class="flex gap-8 rounded bg-slate-100 p-4">
+							<div>
+								<div class="text-lg">{formatAttemptDate(attempt[0].date)}</div>
+								<div class="text-sm">{formatAttemptDateDay(attempt[0].date)}</div>
+								<div class="text-sm">{formatAttemptDateTime(attempt[0].date)}</div>
 							</div>
-						{/each}
-					</div>
-				{/if}
-			{/each}
+							<div>
+								{#each attempt as set, setIndex (setIndex)}
+									<div>
+										{set.measurement} x {set.reps}
+										{#if set.notes}
+											<span class="ml-2 text-sm text-gray-600 italic">{set.notes}</span>
+										{/if}
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+				{/each}
+			</div>
 		</div>
 	</div>
 {:else}

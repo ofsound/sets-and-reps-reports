@@ -43,16 +43,24 @@ export const isMeasurementAnInteger = (measurement: string): boolean => {
 }
 
 export const formatAttemptDate = (date: number): string => {
+    return new Date(date).toLocaleDateString(undefined, {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric'
+    });
+}
+
+export const formatAttemptDateDay = (date: number): string => {
+    return new Date(date).toLocaleString(undefined, { weekday: 'long' });
+}
+
+export const formatAttemptDateTime = (date: number): string => {
     return new Date(date)
         .toLocaleString(undefined, {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric',
             hour: 'numeric',
             minute: '2-digit',
             hour12: true
         })
-        .replace(',', '')
         .replace(
             /(\d{1,2}:\d{2})\s([AP]M)/,
             (_, t, ap) => t.toLowerCase() + ap.toLowerCase()
