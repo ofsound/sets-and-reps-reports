@@ -2,7 +2,9 @@
 	import { page } from '$app/state';
 
 	import { transformAttemptsToChartData } from '$lib/utils/chartData';
+	import { formatAttemptDate } from '$lib/utils/dataConversions';
 	import { getExercise } from './exercise.remote';
+
 	import Chart from '$lib/components/Chart.svelte';
 
 	// Use remote function to fetch exercise data
@@ -36,24 +38,11 @@
 					<div class="mb-4 rounded border p-4">
 						<h3 class="font-semibold">Attempt {attemptIndex + 1}</h3>
 						<p class="ml-4 text-sm text-gray-500">
-							Date: {new Date(attempt[0].date)
-								.toLocaleString(undefined, {
-									month: '2-digit',
-									day: '2-digit',
-									year: 'numeric',
-									hour: 'numeric',
-									minute: '2-digit',
-									hour12: true
-								})
-								.replace(',', '')
-								.replace(
-									/(\d{1,2}:\d{2})\s([AP]M)/,
-									(_, t, ap) => t.toLowerCase() + ap.toLowerCase()
-								)}
+							{formatAttemptDate(attempt[0].date)}
 						</p>
 
 						{#each attempt as set, setIndex (setIndex)}
-							<div class="ml-4">
+							<div class="">
 								<p>
 									{set.reps} x {set.measurement}
 									{#if set.notes}
