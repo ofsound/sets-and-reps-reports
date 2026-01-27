@@ -21,7 +21,7 @@
 </script>
 
 {#if exerciseQuery?.loading}
-	<p>Loading exercise...</p>
+	<!-- <p>Loading exercise...</p> -->
 {:else if exerciseQuery?.error}
 	<p>Error loading exercise: {exerciseQuery.error.message}</p>
 {:else if exercise}
