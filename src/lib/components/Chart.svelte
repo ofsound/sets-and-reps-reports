@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import * as d3 from 'd3';
 	import type { ChartDataPoint } from '$lib/utils/chartData';
 	import {
@@ -17,11 +18,57 @@
 	// Chart container ref
 	let chartContainer: HTMLDivElement | undefined = $state(undefined);
 
-	// Tooltip state
+	// Tooltip state (anchor = cursor in viewport coords for position: fixed)
 	let tooltipVisible = $state(false);
 	let tooltipData = $state<ChartDataPoint | null>(null);
-	let tooltipX = $state(0);
-	let tooltipY = $state(0);
+	let tooltipEl: HTMLDivElement | undefined = $state(undefined);
+	let tooltipLeft = $state(0);
+	let tooltipTop = $state(0);
+	let tooltipPositioned = $state(false);
+
+	const TOOLTIP_OFFSET = 10;
+	const VIEWPORT_PADDING = 8;
+
+	function positionTooltip(anchorX: number, anchorY: number) {
+		if (!tooltipEl) {
+			return;
+		}
+
+		const { width, height } = tooltipEl.getBoundingClientRect();
+		const maxLeft = window.innerWidth - width - VIEWPORT_PADDING;
+		const maxTop = window.innerHeight - height - VIEWPORT_PADDING;
+
+		let left = anchorX + TOOLTIP_OFFSET;
+		if (left + width > window.innerWidth - VIEWPORT_PADDING) {
+			left = anchorX - width - TOOLTIP_OFFSET;
+		}
+		left = Math.max(VIEWPORT_PADDING, Math.min(left, maxLeft));
+
+		let top = anchorY - 30;
+		if (top < VIEWPORT_PADDING) {
+			top = anchorY + TOOLTIP_OFFSET;
+		}
+		if (top + height > window.innerHeight - VIEWPORT_PADDING) {
+			top = anchorY - height - TOOLTIP_OFFSET;
+		}
+		top = Math.max(VIEWPORT_PADDING, Math.min(top, maxTop));
+
+		tooltipLeft = left;
+		tooltipTop = top;
+		tooltipPositioned = true;
+	}
+
+	async function showTooltip(anchorX: number, anchorY: number, point: ChartDataPoint) {
+		tooltipVisible = true;
+		tooltipData = point;
+		tooltipPositioned = false;
+
+		await tick();
+
+		if (tooltipVisible && tooltipData) {
+			positionTooltip(anchorX, anchorY);
+		}
+	}
 
 	// Render chart when data or container changes
 	$effect(() => {
@@ -95,14 +142,12 @@
 			.attr('stroke-width', 2)
 			.style('cursor', 'pointer')
 			.on('mouseover', function (event, d) {
-				tooltipVisible = true;
-				tooltipData = d;
-				tooltipX = event.pageX;
-				tooltipY = event.pageY;
+				void showTooltip(event.clientX, event.clientY, d);
 			})
 			.on('mouseout', function () {
 				tooltipVisible = false;
 				tooltipData = null;
+				tooltipPositioned = false;
 			});
 
 		const xAxis = g.append('g').attr('transform', `translate(0,${chartHeight})`);
@@ -190,7 +235,12 @@
 {/if}
 
 {#if tooltipVisible && tooltipData}
-	<div class="tooltip" style="left: {tooltipX + 10}px; top: {tooltipY - 30}px;">
+	<div
+		bind:this={tooltipEl}
+		class="tooltip"
+		class:tooltip-visible={tooltipPositioned}
+		style="left: {tooltipLeft}px; top: {tooltipTop}px;"
+	>
 		<div class="mb-0.5 text-[15px]">
 			{formatAttemptDate(tooltipData.attempt[0].date)}
 		</div>
@@ -226,5 +276,11 @@
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 		backdrop-filter: blur(4px);
 		min-width: 180px;
+		max-width: min(320px, calc(100vw - 16px));
+		visibility: hidden;
+	}
+
+	.tooltip.tooltip-visible {
+		visibility: visible;
 	}
 </style>
