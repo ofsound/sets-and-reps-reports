@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { getExercises } from './exercises.remote';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { downloadBlob } from '$lib/utils/downloadBlob';
 
 	let { children } = $props();
@@ -10,6 +11,7 @@
 	// Fetch exercises list for navigation menu using remote function
 	const exercisesQuery = getExercises();
 	const exercises = $derived(exercisesQuery.current ?? []);
+	const timelineActive = $derived(page.url.pathname === '/timeline');
 
 	let exporting = $state(false);
 	let exportError = $state<string | null>(null);
@@ -41,9 +43,26 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<header class="fixed inset-x-0 top-0 z-10 mb-6 border-b border-b-stone-200 bg-gray-100 px-4 py-3">
+<header class="relative z-10 border-b border-b-stone-200 bg-gray-100 px-4 py-3 md:sticky md:top-0">
 	<div class="flex items-start justify-between gap-4">
 		<nav class="flex min-w-0 flex-1 flex-wrap gap-2">
+			<a
+				href={resolve('/timeline')}
+				class="flex items-center gap-1.5 rounded px-3 py-1 text-sm font-semibold transition-colors {timelineActive
+					? 'bg-emerald-700 text-white hover:bg-emerald-800'
+					: 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'}"
+			>
+				<svg aria-hidden="true" viewBox="0 0 16 16" class="h-3.5 w-3.5" fill="none">
+					<path
+						d="M2 12.5h12M3 10l2.2-2.2 2 1.6L11.5 5 14 6.6"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				Timeline
+			</a>
 			{#if exercisesQuery.loading}
 				<span class="text-sm text-gray-500">Loading exercises...</span>
 			{:else if exercisesQuery.error}
@@ -52,7 +71,7 @@
 				{#each exercises as exercise (exercise.id)}
 					{@const active = page.url.pathname === `/exercises/${exercise.id}`}
 					<a
-						href="/exercises/{exercise.id}"
+						href={resolve('/exercises/[exerciseID]', { exerciseID: exercise.id })}
 						class="rounded px-3 py-1 text-sm font-medium transition-colors {active
 							? 'bg-blue-600 text-white hover:bg-blue-700'
 							: 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-900'}"
@@ -79,6 +98,6 @@
 	</div>
 </header>
 
-<main class="p-4 pt-24">
+<main class="p-4">
 	{@render children()}
 </main>
