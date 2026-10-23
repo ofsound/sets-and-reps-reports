@@ -118,27 +118,22 @@ export function timelinePosition(date: Date, start: Date, end: Date): number {
 }
 
 export function createTimelineTicks(start: Date, end: Date): TimelineTick[] {
-	const totalMonths =
-		(end.getFullYear() - start.getFullYear()) * 12 + end.getMonth() - start.getMonth();
-	const interval = totalMonths > 48 ? 12 : totalMonths > 18 ? 6 : totalMonths > 8 ? 3 : 1;
 	const formatter = new Intl.DateTimeFormat(undefined, {
-		month: interval === 12 ? undefined : 'short',
-		year: 'numeric'
+		month: 'short'
 	});
 	const ticks: TimelineTick[] = [];
 	let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
 
-	if (interval > 1) {
-		cursor = addMonths(cursor, interval - (cursor.getMonth() % interval));
-	}
-
 	while (cursor <= end) {
+		const isYearStart = cursor.getMonth() === 0;
+		const shortYear = String(cursor.getFullYear()).slice(-2);
+
 		ticks.push({
 			date: cursor,
-			label: formatter.format(cursor),
-			major: cursor.getMonth() === 0
+			label: `${formatter.format(cursor)}${isYearStart ? ` '${shortYear}` : ''}`,
+			major: isYearStart
 		});
-		cursor = addMonths(cursor, interval);
+		cursor = addMonths(cursor, 1);
 	}
 
 	return ticks;
